@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  WebhookUrl:
+    Type: String
+    Description: The google chat webhook URL to send messages to.
+
+Resources:
+  conformitytogchatsnskey:
+    Type: AWS::KMS::Key
+    Properties:
+      KeyPolicy:
+        Statement:
+          - Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ""
+                - - "arn:"
+                  - !Ref "AWS::Partition"
+                  - :iam::717210094962:root
+            Resource: "*"
+          - Action:
+              - kms:Create*
+              - kms:Describe*
+              - kms:Enable*
+              - kms:List*
+              - kms:Put*
+              - kms:Update*
+              - kms:Revoke*
+              - kms:Disable*
+              - kms:Get*
+              - kms:Delete*
+              - kms:ScheduleKeyDeletion
+              - kms:CancelKeyDeletion
+              - kms:GenerateDataKey
+              - kms:TagResource
+              - kms:UntagResource
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ""
+                - - "arn:"
+                  - !Ref "AWS::Partition"
+                  - ":iam::"
+                  - !Ref "AWS::AccountId"
+                  - :root
+            Resource: "*"
+        Version: "2012-10-17"
+      Description: Key used to encrypt the SNS topic used as part of the Conformity to Google Chat webhook integration.
+
+  conformitytogchatsnstopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      KmsMasterKeyId: !GetAtt conformitytogchatsnskey.Arn
+      Subscription:
+        - Endpoint: !GetAtt conformitytogchatlambdafunction.Arn
+          Protocol: lambda
+
+  conformitytogchatsnstopicpolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action: SNS:Publish
+            Effect: Allow
+            Principal:
+              AWS: !Join
+                - ""
+                - - "arn:"
+                  - !Ref "AWS::Partition"
+                  - :iam::717210094962:root
+            Resource: !Ref conformitytogchatsnstopic
+            Sid: "0"
+        Version: "2012-10-17"
+      Topics:
+        - !Ref conformitytogchatsnstopic
+
+  conformitytogchatlambdarole:
+    Type: AWS::IAM::Role
+    Properties:
+      Description: IAM Role for Google Chat Webhook lambda function
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: 
+              - lambda.amazonaws.com
+            Action: 
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  conformitytogchatlambdafunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import json
+          import os
+          import urllib3
+
+          http = urllib3.PoolManager()
+
+
+          def handler(event, context):
+              url = os.environ["WEBHOOK_URL"]
+              msg = json.loads(event["Records"][0]["Sns"]["Message"])
+              message = msg["message"]
+              ruletitle = msg["ruleTitle"]
+              kburl = msg["resolutionPageUrl"]
+              risk = msg["riskLevel"]
+              region = msg["region"]
+              resource = msg["resource"]
+              provider = msg["provider"].upper()
+              providerid = msg["cloudProviderId"]
+              text = f"""<b>{message}</b>
+          <a href=\"{kburl}\">Rule: {ruletitle}</a>
+          A new violation has been introduced on cloud account: <b>{provider} {providerid}</b>
+
+          <b>Risk level: {risk}</b>
+          <b>Region: {region}</b>
+          <b>Resource: {resource}</b>"""
+              webhookbody = {
+                  "cards": [{"sections": [{"widgets": [{"textParagraph": {"text": text}}]}]}]
+              }
+              encoded_msg = json.dumps(webhookbody).encode("utf-8")
+              resp = http.request("POST", url, body=encoded_msg)
+              print(
+                  {
+                      "message": event["Records"][0]["Sns"]["Message"],
+                      "encoded_msg": encoded_msg,
+                      "status_code": resp.status,
+                      "response": resp.data,
+                  }
+              )
+      Role: !GetAtt "conformitytogchatlambdarole.Arn"
+      Handler: index.handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          WEBHOOK_URL: !Ref WebhookUrl
+
+  conformitytogchatlambdapermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt conformitytogchatlambdafunction.Arn
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref conformitytogchatsnstopic
+
+Outputs:
+  TopicARN:
+    Description: SNS Topic ARN to be used in Conformity dashboard
+    Value: !Ref conformitytogchatsnstopic
