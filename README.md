@@ -22,10 +22,10 @@ Information / access you need to install the solution
 
 ## Deployment
 
-### Deployment Steps (via AWS Console)
-  1. Log into Google Chat and create an incoming webhook in your desired channel (Channel Settings -> Manage Webhooks -> Add Webhook). Copy the Webhook URL to your clipboard as you will need this in the next step. 
+### Deployment Steps
+  1. Log into Google Chat and create an incoming webhook in your desired channel (Channel Settings -> Manage Webhooks -> Add Webhook). Copy the Webhook URL to your clipboard as you will need this in the following steps. 
   2. Log into the AWS Account you plan on running the stack in and open the CloudFormation Service. Select "Create Stack".
-  3. Give the stack a name and fill in the WebhookUrl parameter which the URL you copied in step one. Click next and acknowledge the creation of IAM resources. Click Create Stack and wait for create complete status.
+  3. Under the specify template section select "Upload a template file" and upload the provided template file and select Next. Give the stack a name and fill in the WebhookUrl parameter which the URL you copied in step 1. Click next and acknowledge the creation of IAM resources. Click Create Stack and wait for create complete status.
   4. Once the stack creation completes, browse to the "Outputs" tab and copy down the ARN of the resulting SNS Topic.
   5. Log into Conformity and navigate to the communication settings page for the account you wish to setup the webhook for. Select "Amazon SNS" as the communication channel type.
   6. Select your desired triggers eg: Status "Failure", Risk level: Extreme, Very high, High and click Save.
