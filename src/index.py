@@ -30,9 +30,11 @@ A new violation has been introduced on cloud account: <b>{provider} {providerid}
     }
     encoded_msg = json.dumps(webhookbody).encode("utf-8")
     resp = http.request("POST", url, body=encoded_msg)
-    return {
-        "message": event["Records"][0]["Sns"]["Message"],
-        "encoded_msg": encoded_msg,
-        "status_code": resp.status,
-        "response": resp.data,
-    }
+    print(
+        {
+            "message": event["Records"][0]["Sns"]["Message"],
+            "encoded_msg": encoded_msg,
+            "status_code": resp.status,
+            "response": resp.data,
+        }
+    )
