@@ -29,7 +29,7 @@ Information / access you need to install the solution
   4. Once the stack creation completes, browse to the "Outputs" tab and copy down the ARN of the resulting SNS Topic.
   5. Log into Conformity and navigate to the communication settings page for the account you wish to setup the webhook for. Select "Amazon SNS" as the communication channel type.
   6. Select your desired triggers eg: Status "Failure", Risk level: Extreme, Very high, High and click Save.
-  7. Select 'Configure Now...' to set the Amazon SNS Topic. Paste in the value you copied from the Cloudformation output tabs. Ensure there are no leading or trailing spaces and select save.
+  7. Select 'Configure Now...' to set the Amazon SNS Topic. Paste in the value you copied from the Cloudformation output tabs. Ensure there are no leading or trailing spaces and select save. If successful you should receive a "Test message from Cloud Conformity" within your google chat channel.
   8. Turn on either Automatic or Manual notifications and the webhook setup is now complete.
 
 ## Authors
