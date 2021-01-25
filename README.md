@@ -3,6 +3,8 @@
 
 This CloudFormation stack configures the required resources (SNS, KMS, Lambda) to send Cloud Conformity notifications through to Google Chat incoming-webhooks.
 
+![Example webhook message](images/example.png)
+
 ### Services leveraged
 - AWS CloudFormation
 - AWS IAM
