@@ -1,7 +1,7 @@
 # Cloud-One-Conformity-SNS-to-Google-Chat-Webhook
 ## Solution Overview
 
-This CloudFormation stack configures the required resources (SNS, KMS, Lambda) to send Cloud Conformity notifications through to Google Chat channels via incoming-webhooks feature.
+This CloudFormation stack configures the required resources (SNS, KMS, Lambda) to send Cloud Conformity notifications through to Google Chat channels via the incoming-webhooks feature.
 
 ![Example webhook message](images/example.png)
 
