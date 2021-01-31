@@ -12,7 +12,7 @@ def handler(event, context):
         webhooktext = event["Records"][0]["Sns"]["Message"]
     else:
         msg = json.loads(event["Records"][0]["Sns"]["Message"])
-        if msg["status"] != "FAILURE":
+        if msg["status"] == "SUCCESS":
             webhooktext = "SUCCESS check message received, please check your Conformity SNS Communication Channels settings are set to send only FAILURE notifcations"
         else:
             message = msg["message"]
